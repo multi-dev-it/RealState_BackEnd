@@ -3,6 +3,19 @@ import appErr from '../utils/appErr.js'
 import sendEmail from '../utils/sendMail.js'
 import emailTemp from '../utils/verificationEmailTemp.js'
 
+// generate JWT token
+const generateAccessToken = async (id) => {
+  try {
+    const user = await User.findById({ _id: id })
+    const accessToken = await user.generateAccessToken()
+    user.accessToken = accessToken
+    await user.save()
+    return { accessToken }
+  } catch (error) {
+    return appErr(error.message, 400)
+  }
+}
+
 // create user
 const createUser = async (req, res) => {
   try {
@@ -64,4 +77,46 @@ const emailVerification = async (req, res) => {
     return appErr({ error: error.message }, 400)
   }
 }
-export { createUser, emailVerification }
+
+// login user
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    const userFound = await User.findOne({ email })
+    if (!userFound) {
+      return res
+        .status(400)
+        .json({ status: false, message: 'user does not found', data: null })
+    }
+
+    const isPasswordCorrect = await userFound.correctPassword(password)
+    if (!isPasswordCorrect) {
+      return res
+        .status(400)
+        .json({ status: false, message: 'email and password are incorrect' })
+    }
+
+    if (!userFound.emailVerified) {
+      return res.status(400).json({
+        status: false,
+        message: 'please verify your account, check your mail box',
+        data: null,
+      })
+    }
+    const { accessToken } = await generateAccessToken(userFound._id)
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+    })
+
+    return res.status(200).json({
+      status: true,
+      message: 'user login successful',
+      token: accessToken,
+    })
+  } catch (error) {
+    return appErr(error.message, 400)
+  }
+}
+export { createUser, emailVerification, loginUser }
