@@ -33,6 +33,12 @@ const userSchema = new Schema(
         },
       },
     ],
+    accessToken: {
+      type: String,
+    },
+    emailVerified: {
+      type: Date,
+    },
   },
   { timestamps: true }
 )

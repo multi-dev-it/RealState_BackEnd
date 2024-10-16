@@ -1,4 +1,7 @@
 import User from '../models/userModel.js'
+import appErr from '../utils/appErr.js'
+import sendEmail from '../utils/sendMail.js'
+import emailTemp from '../utils/verificationEmailTemp.js'
 
 // create user
 const createUser = async (req, res) => {
@@ -20,15 +23,15 @@ const createUser = async (req, res) => {
       phoneNumber,
     })
 
-    return res
-      .status(201)
-      .json({
-        status: true,
-        message: 'user created successfully',
-        data: newUser,
-      })
+    await sendEmail(newUser.email, emailTemp)
+
+    return res.status(201).json({
+      status: true,
+      message: 'user created successfully',
+      data: newUser,
+    })
   } catch (error) {
-    
+    return appErr(error.message, 400)
   }
 }
 
