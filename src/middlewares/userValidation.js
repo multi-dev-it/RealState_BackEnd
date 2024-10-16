@@ -1,3 +1,6 @@
+import User from '../models/userModel.js'
+import appErr from '../utils/appErr.js'
+
 const createUserValidation = async (req, res, next) => {
   try {
     const { fullName, email, password, phoneNumber } = req.body
@@ -20,4 +23,22 @@ const createUserValidation = async (req, res, next) => {
   }
   next()
 }
-export { createUserValidation }
+
+const loginUserValidation = async (req, res, next) => {
+  try {
+    const { email, password } = req.body
+
+    if (
+      (email == '' || email == undefined) &&
+      (password == '' || password == undefined)
+    ) {
+      return res
+        .status(400)
+        .json({ status: false, message: 'all fields are required' })
+    }
+  } catch (error) {
+    return appErr('login validation failed', 400)
+  }
+  next()
+}
+export { createUserValidation, loginUserValidation }
