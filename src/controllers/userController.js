@@ -23,7 +23,9 @@ const createUser = async (req, res) => {
       phoneNumber,
     })
 
-    await sendEmail(newUser.email, emailTemp)
+    const link = await newUser.generateAccessToken()
+
+    await sendEmail(newUser.email, emailTemp(link))
 
     return res.status(201).json({
       status: true,
@@ -34,5 +36,32 @@ const createUser = async (req, res) => {
     return appErr(error.message, 400)
   }
 }
+// user email verification
+const emailVerification = async (req, res) => {
+  try {
+    const { link } = req.params
+    let confirmEmailMessage = ''
 
-export { createUser }
+    const user = new User()
+    const token = await user.verifyAccessToken(link)
+
+    if (token) {
+      const userFound = await User.findOne({ email: token.email })
+      if (userFound) {
+        userFound.emailVerified = new Date().toDateString()
+        await userFound.save()
+        confirmEmailMessage = 'Your email has been verified!'
+        return res.send(confirmEmailMessage)
+      } else {
+        confirmEmailMessage = 'User verification failed!'
+        return res.send(confirmEmailMessage)
+      }
+    } else {
+      confirmEmailMessage = 'Invalid verification url'
+      return res.send(confirmEmailMessage)
+    }
+  } catch (error) {
+    return appErr({ error: error.message }, 400)
+  }
+}
+export { createUser, emailVerification }

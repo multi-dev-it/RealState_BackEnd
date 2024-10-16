@@ -1,5 +1,7 @@
 import mongoose, { Schema } from 'mongoose'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+import { accessTokenExpire, accessTokenSecret } from '../config/index.js'
 
 const userSchema = new Schema(
   {
@@ -53,6 +55,29 @@ userSchema.pre('save', async function (next) {
 
   next()
 })
+
+// generate access token
+userSchema.methods.generateAccessToken = async function () {
+  return jwt.sign(
+    {
+      id: this._id,
+      email: this.email,
+      fullName: this.fullName,
+    },
+    accessTokenSecret,
+    { expiresIn: accessTokenExpire }
+  )
+}
+
+// verify access token
+userSchema.methods.verifyAccessToken = async function (token) {
+  return jwt.verify(token, accessTokenSecret, function (err, decoded) {
+    if (err) {
+      return null
+    }
+    return decoded
+  })
+}
 
 const User = mongoose.model('User', userSchema)
 export default User
