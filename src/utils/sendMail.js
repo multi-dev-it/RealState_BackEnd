@@ -14,9 +14,9 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async (receiver, emailTemp) => {
   // send mail with defined transport object
   const info = await transporter.sendMail({
-    from: 'it.multidev@gmail.com',
+    from: '"Realstate Agency" <noreply@realstate-agency.com>',
     to: receiver,
-    subject: 'Verify Your Email Address: Realstate Agency',
+    subject: 'Verify Your Email Address for Realstate Agency',
     text: '',
     html: emailTemp,
   })
