@@ -39,7 +39,12 @@ const userSchema = new Schema(
 
 // hash password
 userSchema.pre('save', async function (next) {
-  await bcrypt.hash(this.password, 10)
+  // only run thus function if password was actually modified
+  if (!this.isModified('password')) return next()
+
+  // hash password with cost of 10
+  this.password = await bcrypt.hash(this.password, 10)
+
   next()
 })
 
